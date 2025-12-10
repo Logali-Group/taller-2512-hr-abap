@@ -1,0 +1,212 @@
+managed implementation in class zbp_i_hr_expense_req unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_HR_EXPENSE_REQ alias ExpenseRequest
+persistent table zhr_expense_req
+draft table zhr_expen_req_d
+lock master
+total etag LastChangedAt
+authorization master ( instance )
+etag master LocalLastChangedAt
+
+{
+  create ( authorization : global );
+  update;
+  delete;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare { }
+
+  field ( numbering : managed, readonly ) RequestID;
+
+  field ( readonly ) CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
+
+  association _Attachments { create; with draft; }
+  association _Items { create; with draft; }
+  association _Logs { create; with draft; }
+
+  mapping for zhr_expense_req
+    {
+      RequestID          = request_id;
+      EmployeeID         = employee_id;
+      ExpenseReportName  = expense_report_name;
+      ExpenseDate        = expense_date;
+      TripPurpose        = trip_purpose;
+      TripStartDate      = trip_start_date;
+      TripEndDate        = trip_end_date;
+      Destination        = destination;
+      ProjectCode        = project_code;
+      CostCenter         = cost_center;
+      WBSElement         = wbs_element;
+      InternalOrder      = internal_order;
+      GLAccount          = gl_account;
+      TotalAmount        = total_amount;
+      Currency           = currency;
+      Status             = status;
+      SubmissionDate     = submission_date;
+      ApproverID         = approver_id;
+      ApprovalDate       = approval_date;
+      ApprovalComments   = approval_comments;
+      PaymentStatus      = payment_status;
+      PaymentDate        = payment_date;
+      PaymentMethod      = payment_method;
+      PaymentReference   = payment_reference;
+      BankAccount        = bank_account;
+      ReceiptsAttached   = receipts_attached;
+      PolicyCompliant    = policy_compliant;
+      AuditRequired      = audit_required;
+      AuditComments      = audit_comments;
+      CreatedAt          = created_at;
+      CreatedBy          = created_by;
+      LastChangedBy      = last_changed_by;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+
+}
+
+define behavior for ZI_HR_EXPENSE_ITEM alias ExpenseRequestItems
+persistent table zhr_expense_item
+draft table zhr_expen_item_d
+lock dependent by _ExpenseReq
+authorization dependent by _ExpenseReq
+{
+  update;
+  delete;
+  field ( readonly : update ) ItemID;
+  field ( readonly ) RequestID, CreatedBy, CreatedAt, LastChangedAt, LastChangedBy;
+
+  association _ExpenseReq { with draft; }
+
+  mapping for zhr_expense_item
+    {
+      RequestID             = request_id;
+      ItemID                = item_id;
+      ExpenseType           = expense_type;
+      ExpenseDate           = expense_date;
+      Description           = description;
+      Amount                = amount;
+      Currency              = currency;
+      AmountLocal           = amount_local;
+      CurrencyLocal         = currency_local;
+      ExchangeRate          = exchange_rate;
+      ReceiptNumber         = receipt_number;
+      ReceiptDate           = receipt_date;
+      VendorName            = vendor_name;
+      VendorTaxId           = vendor_tax_id;
+      TaxAmount             = tax_amount;
+      TaxCode               = tax_code;
+      TaxRecoverable        = tax_recoverable;
+      City                  = city;
+      Country               = country;
+      BusinessPurpose       = business_purpose;
+      Attendees             = attendees;
+      Billable              = billable;
+      ClientCode            = client_code;
+      RequiresJustification = requires_justification;
+      Justification         = justification;
+      PolicyException       = policy_exception;
+      ExceptionReason       = exception_reason;
+      CreatedBy             = created_by;
+      CreatedAt             = created_at;
+      LastChangedBy         = last_changed_by;
+      LastChangedAt         = last_changed_at;
+    }
+}
+
+define behavior for ZI_HR_EXPENSE_LOG alias ExpenseReqLogs
+persistent table zhr_approval_log
+draft table zhr_appro_log_d
+lock dependent by _ExpenseReq
+authorization dependent by _ExpenseReq
+{
+  update;
+  delete;
+  field ( numbering : managed, readonly ) LogID;
+  field ( readonly ) RequestID, CreatedAt, CreatedBy;
+
+  association _ExpenseReq { with draft; }
+
+  mapping for zhr_approval_log
+    {
+      LogID            = log_id;
+      RequestID        = request_id;
+      RequestType      = request_type;
+      ApproverId       = approver_id;
+      ApproverName     = approver_name;
+      ApprovalLevel    = approval_level;
+      ApprovalSequence = approval_sequence;
+      Action           = action;
+      ActionDate       = action_date;
+      ActionTime       = action_time;
+      Comments         = comments;
+      RejectionReason  = rejection_reason;
+      Conditions       = conditions;
+      DelegatedFrom    = delegated_from;
+      DelegatedTo      = delegated_to;
+      DelegationReason = delegation_reason;
+      DelegationStart  = delegation_start;
+      DelegationEnd    = delegation_end;
+      RequestedAmount  = requested_amount;
+      ApprovedAmount   = approved_amount;
+      Currency         = currency;
+      IpAddress        = ip_address;
+      DeviceInfo       = device_info;
+      ApprovalMethod   = approval_method;
+      CreatedBy        = created_by;
+      CreatedAt        = created_at;
+    }
+}
+
+define behavior for ZI_HR_EXPENSE_ATT alias ExpenseReqAttach
+persistent table zhr_attachment
+draft table zhr_attachment_d
+lock dependent by _ExpenseReq
+authorization dependent by _ExpenseReq
+{
+  update;
+  delete;
+  field ( readonly ) RequestID;
+  field ( numbering : managed, readonly ) AttachmentID;
+  association _ExpenseReq {with draft;}
+
+  mapping for zhr_attachment
+    {
+      AttachmentID     = attachment_id;
+      RequestID        = request_id;
+      RequestType      = request_type;
+      ItemId           = item_id;
+      FileName         = file_name;
+      FileExtension    = file_extension;
+      FileType         = file_type;
+      FileSize         = file_size;
+      MimeType         = mime_type;
+      FileContent      = file_content;
+      StorageLocation  = storage_location;
+      ExternalUrl      = external_url;
+      DmsDocumentId    = dms_document_id;
+      ArchiveId        = archive_id;
+      Description      = description;
+      Category         = category;
+      OcrProcessed     = ocr_processed;
+      OcrText          = ocr_text;
+      VendorExtracted  = vendor_extracted;
+      AmountExtracted  = amount_extracted;
+      DateExtracted    = date_extracted;
+      VirusScanned     = virus_scanned;
+      ScanDate         = scan_date;
+      Verified         = verified;
+      VerifiedBy       = verified_by;
+      VerificationDate = verification_date;
+      RetentionPeriod  = retention_period;
+      DeletionDate     = deletion_date;
+      UploadedBy       = uploaded_by;
+      UploadedAt       = uploaded_at;
+      LastAccessedBy   = last_accessed_by;
+      LastAccessedAt   = last_accessed_at;
+    }
+}

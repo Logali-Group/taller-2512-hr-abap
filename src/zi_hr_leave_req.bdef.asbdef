@@ -1,0 +1,167 @@
+managed implementation in class zbp_i_hr_leave_req unique;
+strict ( 2 );
+with draft;
+
+/** ROOT: Leave Request */
+
+define behavior for ZI_HR_LEAVE_REQ alias LeaveRequest
+persistent table zhr_leave_req
+draft table zhr_leave_req_d
+lock master
+total etag LastChangedAt
+authorization master ( instance )
+etag master LocalLastChangedAt
+
+{
+  create ( authorization : global );
+  update;
+  delete;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare { }
+
+  field ( numbering : managed, readonly ) RequestID;
+  field ( readonly ) Status, CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, LocalLastChangedAt;
+
+  association _Attachments { create; with draft; }
+  association _Logs { create; with draft; }
+
+  mapping for zhr_leave_req
+    {
+      RequestId          = request_id;
+      EmployeeId         = employee_id;
+      LeaveType          = leave_type;
+      StartDate          = start_date;
+      EndDate            = end_date;
+      TotalDays          = total_days;
+      StartTime          = start_time;
+      EndTime            = end_time;
+      HalfDayIndicator   = half_day_indicator;
+      Reason             = reason;
+      Comments           = comments;
+      EmergencyContact   = emergency_contact;
+      CoveringPerson     = covering_person;
+      Status             = status;
+      SubmissionDate     = submission_date;
+      ApproverId         = approver_id;
+      ApprovalDate       = approval_date;
+      ApprovalComments   = approval_comments;
+      ApprovalLevel      = approval_level;
+      ExternalRefNumber  = external_ref_number;
+      PayrollProcessed   = payroll_processed;
+      CalendarUpdated    = calendar_updated;
+      CreatedBy          = created_by;
+      CreatedAt          = created_at;
+      LastChangedBy      = last_changed_by;
+      LastChangedAt      = last_changed_at;
+      LocalLastChangedAt = local_last_changed_at;
+    }
+
+}
+
+/** CHILD: APPROVAL LOG (Specific for LEAVE) */
+
+define behavior for ZI_HR_LEAVE_LOG alias LeaveLog
+persistent table zhr_approval_log
+draft table zhr_leave_log_d
+lock dependent by _LeaveReq
+authorization dependent by _LeaveReq
+{
+  update;
+  delete;
+
+  field ( numbering : managed, readonly ) LogID;
+  field ( readonly ) RequestID, RequestType;
+
+  association _LeaveReq { with draft; }
+
+  determination setRequestType on modify { create; }
+
+  mapping for zhr_approval_log
+    {
+      LogId            = log_id;
+      RequestId        = request_id;
+      RequestType      = request_type;
+      ApproverId       = approver_id;
+      ApproverName     = approver_name;
+      ApprovalLevel    = approval_level;
+      ApprovalSequence = approval_sequence;
+      Action           = action;
+      ActionDate       = action_date;
+      ActionTime       = action_time;
+      Comments         = comments;
+      RejectionReason  = rejection_reason;
+      Conditions       = conditions;
+      DelegatedFrom    = delegated_from;
+      DelegatedTo      = delegated_to;
+      DelegationReason = delegation_reason;
+      DelegationStart  = delegation_start;
+      DelegationEnd    = delegation_end;
+      RequestedAmount  = requested_amount;
+      ApprovedAmount   = approved_amount;
+      Currency         = currency;
+      IpAddress        = ip_address;
+      DeviceInfo       = device_info;
+      ApprovalMethod   = approval_method;
+      CreatedBy        = created_by;
+      CreatedAt        = created_at;
+    }
+}
+
+/** CHILD: ATTACHMENTS (Specific for LEAVE) */
+
+define behavior for ZI_HR_LEAVE_ATT alias LeaveAttachment
+persistent table zhr_attachment
+draft table zhr_leave_att_d
+lock dependent by _LeaveReq
+authorization dependent by _LeaveReq
+{
+  update;
+  delete;
+
+  field ( numbering : managed, readonly ) AttachmentId;
+  field ( readonly ) RequestId, RequestType, UploadedBy, UploadedAt;
+
+  association _LeaveReq { with draft; }
+
+  determination setRequestType on modify { create; }
+
+  mapping for zhr_attachment
+    {
+      AttachmentId     = attachment_id;
+      RequestId        = request_id;
+      RequestType      = request_type;
+      ItemId           = item_id;
+      FileName         = file_name;
+      FileExtension    = file_extension;
+      FileType         = file_type;
+      FileSize         = file_size;
+      MimeType         = mime_type;
+      FileContent      = file_content;
+      StorageLocation  = storage_location;
+      ExternalUrl      = external_url;
+      DmsDocumentId    = dms_document_id;
+      ArchiveId        = archive_id;
+      Description      = description;
+      Category         = category;
+      OcrProcessed     = ocr_processed;
+      OcrText          = ocr_text;
+      VendorExtracted  = vendor_extracted;
+      AmountExtracted  = amount_extracted;
+      DateExtracted    = date_extracted;
+      VirusScanned     = virus_scanned;
+      ScanDate         = scan_date;
+      Verified         = verified;
+      VerifiedBy       = verified_by;
+      VerificationDate = verification_date;
+      RetentionPeriod  = retention_period;
+      DeletionDate     = deletion_date;
+      UploadedBy       = uploaded_by;
+      UploadedAt       = uploaded_at;
+      LastAccessedBy   = last_accessed_by;
+      LastAccessedAt   = last_accessed_at;
+    }
+}
